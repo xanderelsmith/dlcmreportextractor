@@ -190,12 +190,6 @@ function App() {
                 </div>
               )}
 
-              {report.status === 'submitted' && (
-                <div style={{ color: '#4ade80', fontSize: '0.8rem', marginTop: '1rem', textAlign: 'center', fontWeight: 'bold' }}>
-                  ✓ SUBMITTED TO FORM
-                </div>
-              )}
-
               {isSoloSunday && (
                 <button 
                   onClick={() => handleDuplicate(report)}
@@ -219,6 +213,21 @@ function App() {
             >
               {isSubmittingAll ? '🚀 Submitting All...' : '🚀 Submit All Valid Entries to Google Forms'}
             </button>
+            
+            {reports.some(r => r.status === 'submitted') && (
+              <div style={{ 
+                background: 'rgba(34, 197, 94, 0.1)', 
+                border: '1px solid #22c55e', 
+                borderRadius: '12px', 
+                padding: '1rem', 
+                textAlign: 'center',
+                color: '#4ade80',
+                fontWeight: 'bold'
+              }}>
+                ✅ {reports.filter(r => r.status === 'submitted').length} of {reports.filter(r => r.location !== 'Unknown').length} reports successfully submitted!
+              </div>
+            )}
+
             <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem' }}>
               Only cards with valid locations will be submitted.
             </p>
