@@ -73,6 +73,8 @@ function App() {
       const youthGirls = serviceReports.reduce((acc, r) => acc + r.youthSisters, 0);
       const childrenBoys = serviceReports.reduce((acc, r) => acc + r.childrenBoys, 0);
       const childrenGirls = serviceReports.reduce((acc, r) => acc + r.childrenGirls, 0);
+      const visitors = serviceReports.reduce((acc, r) => acc + r.visitors, 0);
+      const converts = serviceReports.reduce((acc, r) => acc + r.converts, 0);
       const total = serviceReports.reduce((acc, r) => acc + r.total, 0);
 
       const displayTitle = serviceName === 'Search the Scriptures' ? 'SEARCH THE SCRIPTURE (STS)' : serviceName.toUpperCase();
@@ -82,6 +84,10 @@ function App() {
       summaryText += `ADULT\nMen: ${adultsMen}\nWomen: ${adultsWomen}\nSubtotal: ${adultsMen + adultsWomen}\n\n`;
       summaryText += `YOUTHS\nBoys: ${youthBoys}\nGirls: ${youthGirls}\nSubtotal: ${youthBoys + youthGirls}\n\n`;
       summaryText += `CHILDREN\nBoys: ${childrenBoys}\nGirls: ${childrenGirls}\nSubtotal: ${childrenBoys + childrenGirls}\n\n`;
+      
+      if (visitors > 0) summaryText += `Visitors: ${visitors}\n`;
+      if (converts > 0) summaryText += `Converts: ${converts}\n`;
+      
       summaryText += `🔴 Grand Total: ${total}\n\n---\n\n`;
     });
 
@@ -268,6 +274,12 @@ function App() {
                       <p className="metric-row"><span className="metric-label">Boys</span> <span className="metric-value">{serviceReports.reduce((acc, r) => acc + r.childrenBoys, 0)}</span></p>
                       <p className="metric-row"><span className="metric-label">Girls</span> <span className="metric-value">{serviceReports.reduce((acc, r) => acc + r.childrenGirls, 0)}</span></p>
                       <p className="metric-row" style={{ fontWeight: 'bold' }}><span className="metric-label">Subtotal</span> <span className="metric-value">{serviceReports.reduce((acc, r) => acc + r.childrenBoys + r.childrenGirls, 0)}</span></p>
+                    </div>
+
+                    <div style={{ textAlign: 'left', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px' }}>
+                      <h4 style={{ color: '#22c55e', borderBottom: '1px solid #22c55e', paddingBottom: '0.5rem' }}>OTHERS</h4>
+                      <p className="metric-row"><span className="metric-label">Visitors</span> <span className="metric-value">{serviceReports.reduce((acc, r) => acc + r.visitors, 0)}</span></p>
+                      <p className="metric-row"><span className="metric-label">Converts</span> <span className="metric-value">{serviceReports.reduce((acc, r) => acc + r.converts, 0)}</span></p>
                     </div>
                   </div>
 

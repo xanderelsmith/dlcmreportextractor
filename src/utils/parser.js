@@ -115,26 +115,39 @@ export const parseReports = (rawText) => {
         isTotalMismatch: false
       };
 
-      const findValue = (patterns) => {
+      const findValue = (patterns, fallbackIndex = -1) => {
+        // First try to find by exact label match (supporting : . = -)
         for (const p of patterns) {
-          const regex = new RegExp(`${p}\\s*[:.-]?\\s*(nil|\\d+)`, 'i');
-          const match = section.text.match(regex);
-          if (match) {
+          const regex = new RegExp(`${p}\\s*[:.=\\-~]?\\s*(nil|\\d+)`, 'i');
+          const matches = [...section.text.matchAll(new RegExp(regex, 'gi'))];
+          
+          if (matches.length > 0) {
+            const match = (fallbackIndex !== -1 && matches[fallbackIndex]) ? matches[fallbackIndex] : matches[0];
+            if (!match) continue; // If fallbackIndex is out of bounds for this specific pattern
+            
             const val = match[1].toLowerCase();
             return val === 'nil' ? 0 : parseInt(val, 10);
           }
         }
-        return 0;
+        return null; // Return null instead of 0 to distinguish "not found" from "found zero"
       };
 
-      entry.adultBrothers = findValue(['AB', 'BR', 'AM', 'ADULT BROTHERS', 'MEN']);
-      entry.adultSisters = findValue(['AS', 'SIS', 'AW', 'ADULT SISTERS', 'WOMEN']);
-      entry.youthBrothers = findValue(['YB', 'YOUTH BROTHERS', 'BOYS']);
-      entry.youthSisters = findValue(['YS', 'YG', 'YOUTH GIRLS', 'GIRLS', 'YG\\.']);
-      entry.childrenBoys = findValue(['CB', 'CHB', 'CHILDREN BOYS', 'CB\\.']);
-      entry.childrenGirls = findValue(['CG', 'CHG', 'CS', 'CHILDREN GIRLS', 'CG\\.']);
-      entry.visitors = findValue(['VISITORS', 'VISITOR', 'GUEST', 'GUESTS']);
-      entry.converts = findValue(['CONVERTS', 'CONVERT']);
+      entry.adultBrothers = findValue(['AB', 'BR', 'AM', 'ADULT BROTHERS', 'MEN']) || 0;
+      entry.adultSisters = findValue(['AS', 'SIS', 'AW', 'ADULT SISTERS', 'WOMEN']) || 0;
+      entry.youthBrothers = findValue(['YB', 'YOUTH BROTHERS', 'BOYS']) || 0;
+      
+      // For Youth Sisters, if someone typed YB twice, we look for the 2nd match of 'YB'
+      const ysValue = findValue(['YS', 'YG', 'YOUTH GIRLS', 'GIRLS', 'YG\\.']);
+      entry.youthSisters = ysValue !== null ? ysValue : (findValue(['YB'], 1) || 0);
+
+      entry.childrenBoys = findValue(['CB', 'CHB', 'CHILDREN BOYS', 'CB\\.']) || 0;
+      
+      // For Children Girls, if someone typed CB twice, we look for the 2nd match of 'CB'
+      const cgValue = findValue(['CG', 'CHG', 'CS', 'CHILDREN GIRLS', 'CG\\.']);
+      entry.childrenGirls = cgValue !== null ? cgValue : (findValue(['CB', 'CHB'], 1) || 0);
+
+      entry.visitors = findValue(['VISITORS', 'VISITOR', 'GUEST', 'GUESTS']) || 0;
+      entry.converts = findValue(['CONVERTS', 'CONVERT']) || 0;
       
       const reportedTotal = findValue(['TOTAL', 'TTL', 'GRAND TOTAL', 'TOTAL-', 'TOTAL.']);
       const calculatedTotal = entry.adultBrothers + entry.adultSisters + entry.youthBrothers + entry.youthSisters + entry.childrenBoys + entry.childrenGirls;
