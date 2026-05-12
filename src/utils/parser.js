@@ -107,6 +107,9 @@ export const parseReports = (rawText) => {
         youthSisters: 0,
         childrenBoys: 0,
         childrenGirls: 0,
+        visitors: 0,
+        converts: 0,
+        remarks: '',
         total: 0,
         status: 'ready',
         isTotalMismatch: false

@@ -8,6 +8,7 @@ function App() {
   const [rawText, setRawText] = useState('');
   const [reports, setReports] = useState([]);
   const [isSubmittingAll, setIsSubmittingAll] = useState(false);
+  const [editing, setEditing] = useState(null); // { id, field, label, value }
 
   const handleParse = () => {
     const parsed = parseReports(rawText);
@@ -16,6 +17,13 @@ function App() {
 
   const handleValueChange = (id, field, value) => {
     setReports(prev => prev.map(r => r.id === id ? { ...r, [field]: value, status: 'ready' } : r));
+  };
+
+  const handleSaveEdit = () => {
+    if (editing) {
+      handleValueChange(editing.id, editing.field, parseInt(editing.value) || 0);
+      setEditing(null);
+    }
   };
 
   const handleDuplicate = (report) => {
@@ -140,13 +148,17 @@ function App() {
               ].map(metric => (
                 <div className="metric-row" key={metric.key}>
                   <span className="metric-label">{metric.label}</span>
-                  <input 
-                    type="number" 
-                    className="metric-value" 
-                    value={report[metric.key]} 
-                    onChange={(e) => handleValueChange(report.id, metric.key, parseInt(e.target.value) || 0)}
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', textAlign: 'right', color: '#60a5fa', width: '70px', padding: '2px 5px' }}
-                  />
+                  <button 
+                    className="metric-value-btn"
+                    onClick={() => setEditing({ 
+                      id: report.id, 
+                      field: metric.key, 
+                      label: metric.label, 
+                      value: report[metric.key] 
+                    })}
+                  >
+                    {report[metric.key]}
+                  </button>
                 </div>
               ))}
 
@@ -200,11 +212,8 @@ function App() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '2rem' }}>
             <h2 style={{ color: '#fff', margin: 0 }}>🌟 AGBEDE TRANSFORMER GROUP SUMMARY</h2>
-            <button onClick={handleShare} style={{ background: '#a855f7' }}>
-              Share Structured Summary 📋
-            </button>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
@@ -251,6 +260,35 @@ function App() {
             })}
           </div>
         </div>
+      )}
+      {editing && (
+        <div className="modal-backdrop" onClick={() => setEditing(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ color: '#fff', marginBottom: '1rem', textAlign: 'center' }}>
+              Edit {editing.label}
+            </h2>
+            <input 
+              type="number" 
+              className="modal-input" 
+              value={editing.value}
+              autoFocus
+              onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveEdit();
+                if (e.key === 'Escape') setEditing(null);
+              }}
+            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setEditing(null)} style={{ flex: 1, background: '#64748b' }}>Cancel</button>
+              <button onClick={handleSaveEdit} style={{ flex: 1 }}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {reports.length > 0 && (
+        <button className="fab-button" onClick={handleShare}>
+          Share Structured Summary 📋
+        </button>
       )}
     </div>
   );
