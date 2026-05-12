@@ -3,41 +3,81 @@
  */
 
 export const submitToGoogleForm = async (data) => {
-  // Map our data to Google Form entry IDs
-  const FORM_URL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSd9fWpZ0QhRkU-X6Y_p3_pZ-6P-Zq-6P-Zq-6P-Zq-6P/formResponse'; // Placeholder - replace with actual URL if needed
-  
-  const formData = new FormData();
-  
-  // Format date as YYYY-MM-DD for Google Forms
-  const today = new Date().toISOString().split('T')[0];
+  const FORM_URL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSfH59cNzz4EjtwFpJieJ-ZSrenEuhJDSUXpZIAczHIrSLF2Xw/formResponse';
 
-  formData.append('entry.1066942360', today); // Date of Service
-  formData.append('entry.1264956257', data.service); // Service Type
-  formData.append('entry.520406787', data.location); // Group/Location
-  formData.append('entry.314335920', data.adultBrothers);
-  formData.append('entry.464686013', data.adultSisters);
-  formData.append('entry.1066551170', data.youthBrothers);
-  formData.append('entry.1912506852', data.youthSisters);
-  formData.append('entry.1057722128', data.childrenBoys);
-  formData.append('entry.811681918', data.childrenGirls);
-  formData.append('entry.884305055', data.visitors);
-  formData.append('entry.1000887192', data.converts);
-  formData.append('entry.669212626', data.remarks || ''); // Any Remark / Report / Challenge
+  const params = new URLSearchParams();
+
+  // Use report date if available, otherwise today
+  let year, month, day;
+  const now = new Date();
+  year = now.getFullYear();
+  month = String(now.getMonth() + 1).padStart(2, '0');
+  day = String(now.getDate()).padStart(2, '0');
+
+  if (data.date) {
+    try {
+      const parts = data.date.split(/[\/\-\.]/);
+      if (parts.length === 3) {
+        day = parts[0].trim().padStart(2, '0');
+        month = parts[1].trim().padStart(2, '0');
+        let yearPart = parts[2].trim();
+        if (yearPart.length === 2) {
+          year = '20' + yearPart;
+        } else if (yearPart.length === 4) {
+          year = yearPart;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse date:', data.date);
+    }
+  }
+
+  // Google Forms Date Field Split
+  const DATE_ID = '1941210032';
+  params.append(`entry.${DATE_ID}_year`, year);
+  params.append(`entry.${DATE_ID}_month`, month);
+  params.append(`entry.${DATE_ID}_day`, day);
+
+  // Map app service names to EXACT Google Form dropdown choices
+  const serviceMap = {
+    'Monday Bible Study': 'Monday Bible Study',
+    'Search the Scriptures': 'Search the Scriptures',
+    'Sunday Worship Service': 'Sunday Worship Service',
+    'Thursday Revival Service': 'Thursday Revival Service',
+    'HCF': 'HCF',
+    'Crusades': 'Crusades',
+    "Minister's Conference": "Minister's Conference"
+  };
+
+  const finalService = serviceMap[data.service] || data.service;
+
+  // Definitive Mapping for "DLBC TRANSFORMER GROUP ATTENDANCE"
+  params.append('entry.554610952', finalService);
+  params.append('entry.588458783', data.location);
+  params.append('entry.483611869', data.adultBrothers);
+  params.append('entry.1344690217', data.adultSisters);
+  params.append('entry.555733260', data.youthBrothers);
+  params.append('entry.1944720369', data.youthSisters);
+  params.append('entry.270209031', data.childrenBoys);
+  params.append('entry.268304348', data.childrenGirls);
+  params.append('entry.519802581', data.visitors);
+  params.append('entry.2116732443', data.converts);
+  params.append('entry.416962792', data.remarks || 'None');
+
+  console.log('Submitting to Google Form (Final):', params.toString());
 
   try {
-    // Mode: 'no-cors' is required for Google Forms to avoid CORS errors, 
-    // although we won't be able to read the response.
     await fetch(FORM_URL, {
       method: 'POST',
+      body: params.toString(),
       mode: 'no-cors',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: formData.toString(),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     });
-    return { success: true, message: 'Submitted successfully (Note: no-cors mode used)' };
+    return { success: true };
   } catch (error) {
     console.error('Submission error:', error);
-    return { success: false, message: error.message };
+    return { success: false, error: error.message };
   }
 };

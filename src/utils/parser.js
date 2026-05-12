@@ -27,10 +27,10 @@ const SERVICE_MAPPING = {
   'SUNDAY': 'Sunday Worship Service',
   'STS': 'Search the Scriptures',
   'SEARCH THE SCRIPTURES': 'Search the Scriptures',
-  'TRETS': 'Thursday Revival and Evangelism Training Service',
-  'TRET': 'Thursday Revival and Evangelism Training Service',
-  'THURSDAY REVIVAL HOUR': 'Thursday Revival and Evangelism Training Service',
-  'THURSDAY': 'Thursday Revival and Evangelism Training Service',
+  'TRETS': 'Thursday Revival Service',
+  'TRET': 'Thursday Revival Service',
+  'THURSDAY REVIVAL HOUR': 'Thursday Revival Service',
+  'THURSDAY': 'Thursday Revival Service',
 };
 
 export const parseReports = (rawText) => {
@@ -63,6 +63,19 @@ export const parseReports = (rawText) => {
       }
     }
 
+    // Identify Service for this chunk
+    let chunkService = globalService;
+    for (const [key, value] of Object.entries(SERVICE_MAPPING)) {
+      if (upperChunk.split('\n')[0].includes(key)) {
+        chunkService = value;
+        break;
+      }
+    }
+
+    // Identify Date for this chunk
+    const dateMatch = chunk.match(/(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/);
+    const chunkDate = dateMatch ? dateMatch[1] : null;
+
     // Check for sub-sections (Sunday pattern: STS + MESSAGE/SERMON)
     // We look for STS at the start and a second section header like MESSAGE or SERMON
     const hasSTS = upperChunk.includes('STS') || upperChunk.includes('SEARCH THE SCRIPTURES');
@@ -82,18 +95,18 @@ export const parseReports = (rawText) => {
       }
 
       if (splitIndex !== -1) {
-        sections.push({ service: 'Search the Scriptures', text: chunk.substring(0, splitIndex) });
-        sections.push({ service: 'Sunday Worship Service', text: chunk.substring(splitIndex) });
+        sections.push({ service: 'Search the Scriptures', text: chunk.substring(0, splitIndex), date: chunkDate });
+        sections.push({ service: 'Sunday Worship Service', text: chunk.substring(splitIndex), date: chunkDate });
       } else {
-        sections.push({ service: globalService || 'Sunday Worship Service', text: chunk });
+        sections.push({ service: chunkService || 'Sunday Worship Service', text: chunk, date: chunkDate });
       }
     } else {
-      // Single section - use explicit keyword or global context
-      let service = globalService || 'Monday Bible Study';
+      // Single section - use explicit keyword or chunk context
+      let service = chunkService || 'Monday Bible Study';
       if (hasSTS) service = 'Search the Scriptures';
       else if (hasSecondSection) service = 'Sunday Worship Service';
       
-      sections.push({ service, text: chunk });
+      sections.push({ service, text: chunk, date: chunkDate });
     }
 
     sections.forEach((section, sectionIndex) => {
@@ -101,6 +114,7 @@ export const parseReports = (rawText) => {
         id: `${chunkIndex}-${sectionIndex}`,
         location,
         service: section.service,
+        date: section.date,
         adultBrothers: 0,
         adultSisters: 0,
         youthBrothers: 0,
@@ -118,7 +132,7 @@ export const parseReports = (rawText) => {
       const findValue = (patterns, fallbackIndex = -1) => {
         // First try to find by exact label match (supporting : . = -)
         for (const p of patterns) {
-          const regex = new RegExp(`${p}\\s*[:.=\\-~]?\\s*(nil|\\d+)`, 'i');
+          const regex = new RegExp(`\\b${p}\\s*[:.=\\-~]?\\s*(nil|\\d+)`, 'i');
           const matches = [...section.text.matchAll(new RegExp(regex, 'gi'))];
           
           if (matches.length > 0) {

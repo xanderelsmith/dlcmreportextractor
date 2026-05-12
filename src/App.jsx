@@ -37,6 +37,26 @@ function App() {
     setReports(prev => [...prev, newReport]);
   };
 
+  const handleSubmitSingle = async (report) => {
+    if (report.location === 'Unknown') {
+      alert('Please select a location first.');
+      return;
+    }
+
+    setReports(prev => prev.map(r => r.id === report.id ? { ...r, status: 'submitting' } : r));
+
+    const currentTotal = report.adultBrothers + report.adultSisters + report.youthBrothers + report.youthSisters + report.childrenBoys + report.childrenGirls;
+    const submissionData = { ...report, total: currentTotal };
+
+    const result = await submitToGoogleForm(submissionData);
+    if (result.success) {
+      setReports(prev => prev.map(r => r.id === report.id ? { ...r, status: 'submitted' } : r));
+    } else {
+      setReports(prev => prev.map(r => r.id === report.id ? { ...r, status: 'error' } : r));
+      alert(`Failed to submit ${report.location}: ${result.error}`);
+    }
+  };
+
   const handleSubmitAll = async () => {
     const readyReports = reports.filter(r => r.status === 'ready' && r.location !== 'Unknown');
     if (readyReports.length === 0) {
@@ -46,14 +66,10 @@ function App() {
 
     setIsSubmittingAll(true);
     for (const report of readyReports) {
-      const currentTotal = report.adultBrothers + report.adultSisters + report.youthBrothers + report.youthSisters + report.childrenBoys + report.childrenGirls;
-      const submissionData = { ...report, total: currentTotal };
-      
-      await submitToGoogleForm(submissionData);
-      setReports(prev => prev.map(r => r.id === report.id ? { ...r, status: 'submitted' } : r));
+      await handleSubmitSingle(report);
     }
     setIsSubmittingAll(false);
-    alert('All valid reports have been submitted!');
+    alert('All valid reports have been processed!');
   };
 
   const handleShare = () => {
@@ -204,6 +220,23 @@ function App() {
                   Duplicate for {report.service === 'Search the Scriptures' ? 'SWS' : 'STS'}? ➕
                 </button>
               )}
+
+              <button 
+                onClick={() => handleSubmitSingle(report)}
+                disabled={report.status === 'submitting' || report.status === 'submitted'}
+                style={{ 
+                  marginTop: '1rem', 
+                  width: '100%', 
+                  background: report.status === 'submitted' ? '#22c55e' : (report.status === 'error' ? '#ef4444' : '#3b82f6'),
+                  opacity: (report.status === 'submitting' || report.status === 'submitted') ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                {report.status === 'submitting' ? '⏳ Submitting...' : (report.status === 'submitted' ? '✅ Submitted' : '🚀 Submit to Form')}
+              </button>
             </div>
           );
         })}
