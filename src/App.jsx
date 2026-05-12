@@ -49,9 +49,13 @@ function App() {
   };
 
   const handleShare = () => {
-    let summaryText = `🌟 AGBEDE TRANSFORMER GROUP SUMMARY\n\n`;
+    let summaryText = `AGBEDE TRANSFORMER GROUP\n\n`;
+    
+    // Try to extract date from the first few lines of raw text
+    const dateMatch = rawText.match(/(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/);
+    const reportDate = dateMatch ? dateMatch[1] : new Date().toLocaleDateString();
 
-    ['Search the Scriptures', 'Sunday Worship Service', 'Monday Bible Study'].forEach(serviceName => {
+    ['Search the Scriptures', 'Sunday Worship Service', 'Thursday Revival and Evangelism Training Service', 'Monday Bible Study'].forEach(serviceName => {
       const serviceReports = reports.filter(r => r.service === serviceName);
       if (serviceReports.length === 0) return;
 
@@ -63,14 +67,17 @@ function App() {
       const childrenGirls = serviceReports.reduce((acc, r) => acc + r.childrenGirls, 0);
       const total = serviceReports.reduce((acc, r) => acc + r.total, 0);
 
-      summaryText += `${serviceName === 'Search the Scriptures' ? '🔍 SEARCH THE SCRIPTURE (STS)' : `📖 ${serviceName.toUpperCase()}`}\n\n`;
-      summaryText += `🧔🏽♂️ ADULTS\nMen: ${adultsMen}\nWomen: ${adultsWomen}\nSubtotal: ${adultsMen + adultsWomen}\n\n`;
-      summaryText += `🧑🏽🎓 YOUTHS\nBoys: ${youthBoys}\nGirls: ${youthGirls}\nSubtotal: ${youthBoys + youthGirls}\n\n`;
-      summaryText += `🧒🏽 CHILDREN\nBoys: ${childrenBoys}\nGirls: ${childrenGirls}\nSubtotal: ${childrenBoys + childrenGirls}\n\n`;
+      const displayTitle = serviceName === 'Search the Scriptures' ? 'SEARCH THE SCRIPTURE (STS)' : serviceName.toUpperCase();
+      
+      summaryText += `*${displayTitle}*\n`;
+      summaryText += `*${reportDate}.*\n\n`;
+      summaryText += `ADULT\nMen: ${adultsMen}\nWomen: ${adultsWomen}\nSubtotal: ${adultsMen + adultsWomen}\n\n`;
+      summaryText += `YOUTHS\nBoys: ${youthBoys}\nGirls: ${youthGirls}\nSubtotal: ${youthBoys + youthGirls}\n\n`;
+      summaryText += `CHILDREN\nBoys: ${childrenBoys}\nGirls: ${childrenGirls}\nSubtotal: ${childrenBoys + childrenGirls}\n\n`;
       summaryText += `🔴 Grand Total: ${total}\n\n---\n\n`;
     });
 
-    navigator.clipboard.writeText(summaryText);
+    navigator.clipboard.writeText(summaryText.trim());
     alert('Summary copied to clipboard! You can now paste it into WhatsApp.');
   };
 
@@ -201,7 +208,7 @@ function App() {
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-            {['Search the Scriptures', 'Sunday Worship Service', 'Monday Bible Study'].map(serviceName => {
+            {['Search the Scriptures', 'Sunday Worship Service', 'Thursday Revival and Evangelism Training Service', 'Monday Bible Study'].map(serviceName => {
               const serviceReports = reports.filter(r => r.service === serviceName);
               if (serviceReports.length === 0) return null;
 

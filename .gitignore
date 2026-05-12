@@ -1,0 +1,8 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vscode
+.DS_Store
+form_source.html
+form_source_utf8.html

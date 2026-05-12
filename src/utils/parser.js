@@ -27,6 +27,10 @@ const SERVICE_MAPPING = {
   'SUNDAY': 'Sunday Worship Service',
   'STS': 'Search the Scriptures',
   'SEARCH THE SCRIPTURES': 'Search the Scriptures',
+  'TRETS': 'Thursday Revival and Evangelism Training Service',
+  'TRET': 'Thursday Revival and Evangelism Training Service',
+  'THURSDAY REVIVAL HOUR': 'Thursday Revival and Evangelism Training Service',
+  'THURSDAY': 'Thursday Revival and Evangelism Training Service',
 };
 
 export const parseReports = (rawText) => {
