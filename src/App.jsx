@@ -91,7 +91,7 @@ function App() {
       const childrenGirls = serviceReports.reduce((acc, r) => acc + r.childrenGirls, 0);
       const visitors = serviceReports.reduce((acc, r) => acc + r.visitors, 0);
       const converts = serviceReports.reduce((acc, r) => acc + r.converts, 0);
-      const total = serviceReports.reduce((acc, r) => acc + r.total, 0);
+      const total = serviceReports.reduce((acc, r) => acc + (r.adultBrothers + r.adultSisters + r.youthBrothers + r.youthSisters + r.childrenBoys + r.childrenGirls), 0);
 
       const displayTitle = serviceName === 'Search the Scriptures' ? 'SEARCH THE SCRIPTURE (STS)' : serviceName.toUpperCase();
       
@@ -318,7 +318,7 @@ function App() {
 
                   <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '2px dashed rgba(255,255,255,0.1)' }}>
                     <h2 style={{ color: '#fff' }}>
-                      <span style={{ color: '#ef4444' }}>🔴</span> Grand Total: {serviceReports.reduce((acc, r) => acc + r.total, 0)}
+                      <span style={{ color: '#ef4444' }}>🔴</span> Grand Total: {serviceReports.reduce((acc, r) => acc + (r.adultBrothers + r.adultSisters + r.youthBrothers + r.youthSisters + r.childrenBoys + r.childrenGirls), 0)}
                     </h2>
                   </div>
                 </div>

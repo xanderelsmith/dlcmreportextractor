@@ -46,9 +46,8 @@ export const parseReports = (rawText) => {
   }
 
   // Split by WhatsApp header [DD/MM, HH:MM pm] Name/Number:
-  // Using a more inclusive pattern for the sender name to handle emojis and special characters
   const chunks = rawText.split(/\[\d{1,2}\/\d{1,2}, .*?\] .*?:/g).filter(c => c.trim().length > 10);
-
+  
   const allEntries = [];
 
   chunks.forEach((chunk, chunkIndex) => {
@@ -61,7 +60,7 @@ export const parseReports = (rawText) => {
 
     reportTexts.forEach((reportText, reportIndex) => {
       const upperChunk = reportText.toUpperCase();
-
+      
       // Identify Location
       let location = 'Unknown';
       for (const [key, value] of Object.entries(LOCATION_MAPPING)) {
@@ -113,7 +112,7 @@ export const parseReports = (rawText) => {
         let service = reportService || 'Monday Bible Study';
         if (hasSTS) service = 'Search the Scriptures';
         else if (hasSecondSection) service = 'Sunday Worship Service';
-
+        
         sections.push({ service, text: reportText, date: reportDate });
       }
 
@@ -138,46 +137,50 @@ export const parseReports = (rawText) => {
         };
 
         const findValue = (patterns, fallbackIndex = -1) => {
-          // First try to find by exact label match (supporting : . = -)
           for (const p of patterns) {
             // Allow labels to be followed immediately by digits (e.g. AB4)
-            // Use [^A-Z] to ensure we don't match a longer word (e.g. GAB)
             const regexString = `(?:^|[^A-Z])${p.replace('.', '\\.')}\\s*[:.=\\-~]?\\s*(nil|\\d+)`;
             const matches = [...section.text.matchAll(new RegExp(regexString, 'gi'))];
-
+            
             if (matches.length > 0) {
               const match = (fallbackIndex === -1) ? matches[0] : matches[fallbackIndex];
-              if (!match) continue; // If fallbackIndex is out of bounds for this specific pattern
-
+              if (!match) continue;
+              
               const val = match[1].toLowerCase();
               return val === 'nil' ? 0 : parseInt(val, 10);
             }
           }
-          return null; // Return null instead of 0 to distinguish "not found" from "found zero"
+          return null;
         };
 
-        entry.adultBrothers = findValue(['AB', 'BR', 'AM', 'ADULT BROTHERS', 'MEN']) || 0;
-        entry.adultSisters = findValue(['AS', 'SIS', 'AW', 'ADULT SISTERS', 'WOMEN']) || 0;
-        entry.youthBrothers = findValue(['YB', 'YOUTH BROTHERS', 'BOYS']) || 0;
-
-        // For Youth Sisters, if someone typed YB twice, we look for the 2nd match of 'YB'
-        const ysValue = findValue(['YS', 'YG', 'YOUTH GIRLS', 'GIRLS', 'YG\\.']);
-        entry.youthSisters = ysValue !== null ? ysValue : (findValue(['YB'], 1) || 0);
-
-        entry.childrenBoys = findValue(['CB', 'CHB', 'CHILDREN BOYS', 'CB\\.']) || 0;
-
-        // For Children Girls, if someone typed CB twice, we look for the 2nd match of 'CB'
-        const cgValue = findValue(['CG', 'CHG', 'CS', 'CHILDREN GIRLS', 'CG\\.']);
-        entry.childrenGirls = cgValue !== null ? cgValue : (findValue(['CB', 'CHB'], 1) || 0);
-
-        entry.visitors = findValue(['VISITORS', 'VISITOR', 'GUEST', 'GUESTS']) || 0;
-        entry.converts = findValue(['CONVERTS', 'CONVERT']) || 0;
-
+        const ab = findValue(['AB', 'BR', 'AM', 'ADULT BROTHERS', 'MEN']);
+        const as = findValue(['AS', 'SIS', 'AW', 'ADULT SISTERS', 'WOMEN']);
+        const yb = findValue(['YB', 'YOUTH BROTHERS', 'BOYS']);
+        const ys = findValue(['YS', 'YG', 'YOUTH GIRLS', 'GIRLS', 'YG\\.']);
+        const cb = findValue(['CB', 'CHB', 'CHILDREN BOYS', 'CB\\.']);
+        const cg = findValue(['CG', 'CHG', 'CS', 'CHILDREN GIRLS', 'CG\\.']);
+        const vis = findValue(['VISITORS', 'VISITOR', 'GUEST', 'GUESTS']);
+        const conv = findValue(['CONVERTS', 'CONVERT']);
         const reportedTotal = findValue(['TOTAL', 'TTL', 'GRAND TOTAL', 'TOTAL-', 'TOTAL.']);
-        const calculatedTotal = entry.adultBrothers + entry.adultSisters + entry.youthBrothers + entry.youthSisters + entry.childrenBoys + entry.childrenGirls;
 
+        // Skip "ghost" reports that have no data at all (usually artifacts of splitting)
+        if (ab === null && as === null && yb === null && ys === null && cb === null && cg === null && reportedTotal === null) {
+          return;
+        }
+
+        entry.adultBrothers = ab || 0;
+        entry.adultSisters = as || 0;
+        entry.youthBrothers = yb || 0;
+        entry.youthSisters = ys !== null ? ys : (findValue(['YB'], 1) || 0);
+        entry.childrenBoys = cb || 0;
+        entry.childrenGirls = cg !== null ? cg : (findValue(['CB', 'CHB'], 1) || 0);
+        entry.visitors = vis || 0;
+        entry.converts = conv || 0;
+        
+        const calculatedTotal = entry.adultBrothers + entry.adultSisters + entry.youthBrothers + entry.youthSisters + entry.childrenBoys + entry.childrenGirls;
+        
         entry.total = reportedTotal || calculatedTotal;
-        entry.isTotalMismatch = reportedTotal !== 0 && reportedTotal !== calculatedTotal;
+        entry.isTotalMismatch = reportedTotal !== null && reportedTotal !== calculatedTotal;
         if (entry.location === 'Unknown') entry.status = 'error';
 
         allEntries.push(entry);
