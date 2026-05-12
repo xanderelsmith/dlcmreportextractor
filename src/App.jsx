@@ -145,6 +145,8 @@ function App() {
                 { label: 'Youth Sisters', key: 'youthSisters' },
                 { label: 'Children Boys', key: 'childrenBoys' },
                 { label: 'Children Girls', key: 'childrenGirls' },
+                { label: 'Visitors', key: 'visitors' },
+                { label: 'Converts', key: 'converts' },
               ].map(metric => (
                 <div className="metric-row" key={metric.key}>
                   <span className="metric-label">{metric.label}</span>
@@ -161,6 +163,16 @@ function App() {
                   </button>
                 </div>
               ))}
+
+              <div style={{ marginTop: '1rem' }}>
+                <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>Remarks / Challenges</label>
+                <textarea 
+                  value={report.remarks}
+                  onChange={(e) => handleValueChange(report.id, 'remarks', e.target.value)}
+                  placeholder="Enter any remarks..."
+                  style={{ minHeight: '60px', fontSize: '0.8rem', padding: '0.5rem', marginTop: '0.25rem' }}
+                />
+              </div>
 
               <div className="metric-row" style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '1rem' }}>
                 <span className="metric-label" style={{ fontWeight: 'bold', color: '#fff' }}>Calculated Total</span>

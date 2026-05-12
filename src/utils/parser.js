@@ -133,6 +133,8 @@ export const parseReports = (rawText) => {
       entry.youthSisters = findValue(['YS', 'YG', 'YOUTH GIRLS', 'GIRLS', 'YG\\.']);
       entry.childrenBoys = findValue(['CB', 'CHB', 'CHILDREN BOYS', 'CB\\.']);
       entry.childrenGirls = findValue(['CG', 'CHG', 'CS', 'CHILDREN GIRLS', 'CG\\.']);
+      entry.visitors = findValue(['VISITORS', 'VISITOR', 'GUEST', 'GUESTS']);
+      entry.converts = findValue(['CONVERTS', 'CONVERT']);
       
       const reportedTotal = findValue(['TOTAL', 'TTL', 'GRAND TOTAL', 'TOTAL-', 'TOTAL.']);
       const calculatedTotal = entry.adultBrothers + entry.adultSisters + entry.youthBrothers + entry.youthSisters + entry.childrenBoys + entry.childrenGirls;
